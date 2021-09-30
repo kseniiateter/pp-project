@@ -1,5 +1,5 @@
 # pp-project
-python -m venv venv
+python -m venv venv 
 venv\Scripts\activate.bat
 pip install -Ur requirements.txt
 run
