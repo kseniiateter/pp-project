@@ -1,0 +1,694 @@
+openapi: 3.0.1
+info:
+  title: Playlists  Service
+  description: In this playlists service, you can create your own playlist or use a public playlist.
+  version: 1.0.0
+servers:
+  - description: Main Playlists Service server
+    url: http://Playlists/v9
+tags:
+
+- name: Song
+  description: All information about the song
+- name: Playlist
+  description: Access to Playlist
+- name: user
+  description: All about user
+paths:
+  /song:
+    post:
+      tags:
+      - Song
+      summary: Place a song
+      
+      operationId: addsong
+      requestBody:
+        description: placing a certain song
+        
+        content:
+          application/json:
+            schema:
+             $ref: '#/components/schemas/Song'
+          application/xml:
+            schema:
+             $ref: '#/components/schemas/Song'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+        '400':
+          description: Invalid song
+          
+          content: {}
+      security:
+       - playlist_auth:
+         - admin
+         
+  /song/{songId}:
+  
+    get:
+      tags:
+      - Song
+      summary: Find a certain song
+      
+      description: Returns one song
+        with stated ID
+      operationId: getsongById
+      parameters:
+      - name: songId
+        in: path
+        description: ID of product that needs to be found
+        required: true
+        schema:
+          type: integer
+          example: 3
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Song'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Song'
+        '400':
+          description: Invalid ID supplied
+          content: {}
+        '404':
+          description: song
+            not found
+          content: {}
+      security:
+      - playlist_auth:
+        - write:user
+        - read:user
+         
+    put:
+      tags:
+      - Song
+      summary: Update a song
+        by id
+      operationId: updatesong
+      parameters:
+      - name: songId
+        in: path
+        description: An ID of song
+          that needs to be updated
+        required: true
+        schema:
+          type: integer
+          format: int64
+          example: 0
+      requestBody:
+            description: Updated song
+              object
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Song'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/Song'
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+        '400':
+          description: Invalid ID supplied
+          content: {}
+        '404':
+          description: A certain song
+            not found
+          content: {}
+      security:
+       - playlist_auth:
+         - admin
+         
+    delete:
+      tags:
+      - Song
+      summary: Delete a song
+        by id
+      operationId: deletesong
+      parameters:
+      - name: api_key
+        in: header
+        schema:
+          type: string
+      - name: songId
+        in: path
+        description: song
+          id to delete
+        required: true
+        schema:
+          type: integer
+          example: 3
+      responses:
+        '200':
+          description: Successful operation
+          content: {}
+        '400':
+          description: Invalid ID supplied
+          content: {}
+        '404':
+          description: A certain song
+            not found
+          content: {}
+      security:
+       - playlist_auth:
+         - admin
+
+
+  /Playlist:
+  
+    
+
+    post:
+      tags:
+        - Playlist
+      summary: Place an Playlist
+      operationId: placePlaylist
+      requestBody:
+        description: creation of new playlist
+          Playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '400':
+          description: Invalid playlist
+          content: {}
+      x-codegen-request-body-name: body
+      security:
+      - playlist_auth:
+        - write:user
+        - read:user
+        
+    put:
+      tags:
+        - Playlist
+      summary: Update Playlist
+      operationId: updatePlaylist
+      requestBody:
+        description: updated playlist
+          Playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Playlist'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '400':
+          description: Invalid Playlist
+          content: {}
+      security:
+      - playlist_auth:
+        - write:user
+        - read:user
+    
+    
+
+  /Playlist/{playlistId}:
+  
+    get:
+      tags:
+        - Playlist
+      summary: Find playlist by ID
+      description: Getting playlist
+      operationId: getplaylistById
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of Playlist that needs to be fetched
+          required: true
+          schema:
+
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+        '400':
+          description: Invalid ID supplied
+          content: {}
+        '404':
+          description: Playlist not found
+          content: {}
+      security:
+      - playlist_auth:
+        - read:user
+        
+    delete:
+      tags:
+        - Playlist
+      summary: Delete playlistId by ID
+      description: >-
+        For valid response try integer IDs with positive integer value.
+        Negative or non-integer values will generate API errors
+      operationId: deletePlaylistId
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of the playlistId that needs to be deleted
+          required: true
+          schema:
+            minimum: 1
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid ID supplied
+          content: {}
+        '404':
+          description: playlist not found
+          content: {}
+      security:
+      - playlist_auth:
+        - write:user
+        - read:user
+        
+    put:
+      tags:
+        - Playlist
+      summary: create private playlist
+      operationId: createPrivate
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of Playlist that needs to be fetched
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: updated song
+          private Playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivatePlaylist'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PrivatePlaylist'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivatePlaylist'
+        '400':
+          description: Invalid Playlist
+          content: {}
+      security:
+      - playlist_auth:
+        - write:user
+        - read:user
+        
+  /Playlist/{playlistId}/{songId}:
+    
+    post:
+      tags:
+        - Playlist
+      summary: add a song to a Playlist
+      operationId: addSong
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of Playlist where the song will be added
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of song that needs to be added
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: adding a song to a Playlist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistsSongs'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/PlaylistsSongs'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistsSongs'
+        '400':
+          description: Invalid Playlist
+          content: {}
+      security:
+      - playlist_auth:
+        - write:user
+        - read:user
+        
+       
+    delete:
+      tags:
+        - Playlist
+      summary: Delete a song from playlist
+      description: >-
+        For valid response try integer IDs with positive integer value.
+        Negative or non-integer values will generate API errors
+      operationId: deleteSongInPlaylistId
+      parameters:
+        - name: playlistId
+          in: path
+          description: ID of Playlist where the song will be Deleted
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: songId
+          in: path
+          description: ID of song that needs to be Deleted
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid ID supplied
+          content: {}
+        '404':
+          description: playlist not found
+          content: {}
+      security:
+      - playlist_auth:
+        - write:user
+        - read:user       
+        
+  /user:
+    post:
+      tags:
+      - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        description: Created user object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+        '400':
+          description: bad request
+          content: {}
+      x-codegen-request-body-name: body
+  /user/login:
+    get:
+      tags:
+      - user
+      summary: Logs user into the system
+      operationId: loginUser
+      parameters:
+      - name: userName
+        in: query
+        description: The user name for login
+        required: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        description: The password for login in clear text
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/xml:
+              schema:
+                type: string
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Invalid username/password supplied
+          content: {}
+  /user/logout:
+    get:
+      tags:
+      - user
+      summary: Logs out current logged in user session
+      operationId: logoutUser
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+  /user/{userName}:
+    get:
+      tags:
+      - user
+      summary: Get user by name
+      operationId: getUserByName
+      parameters:
+      - name: userName
+        in: path
+        description: 'The name that needs to be fetched. Use user1 for testing. '
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid username supplied
+          content: {}
+        '404':
+          description: User not found
+          content: {}
+      security:
+        - playlist_auth:
+          - read:users
+    put:
+      tags:
+      - user
+      summary: Updated user
+      description: This can only be done by the logged in user.
+      operationId: updateUser
+      parameters:
+      - name: userName
+        in: path
+        description: he name to be updated
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Updated user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+        '400':
+          description: Invalid user supplied
+          content: {}
+        '404':
+          description: User not found
+          content: {}
+      security:
+        - playlist_auth:
+          - admin
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+      - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+      - name: userName
+        in: path
+        description: The name to be deleted
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content: {}
+        '400':
+          description: Invalid username supplied
+          content: {}
+        '404':
+          description: User not found
+          content: {}
+      security:
+        - playlist_auth:
+          - admin
+
+
+
+components:
+
+  schemas:
+    User:
+      type: object
+      properties:
+        Id:
+          type: integer
+          format: int64
+        userName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        userStatus:
+          type: boolean
+          description: User Status
+      xml:
+        name: user
+
+    Song:
+      required:
+      - name
+      - count
+      type: object
+      properties:
+        songId:
+          type: integer
+          format: int64
+        name:
+          type: string
+          example: some song name
+        productionYear:
+          type: integer
+          example: 2019
+        length:
+          type: integer
+          format: int64
+      xml:
+        name: song
+        
+
+    Playlist:
+      properties:
+        playlistid:
+          type: integer
+          format: int64
+        name:
+          type: string
+          example: Happy music
+          
+    PlaylistsSongs:
+      properties:
+        playlist:
+          $ref: '#/components/schemas/Playlist'  
+        song:
+          $ref: '#/components/schemas/Song'
+
+          
+    PrivatePlaylist:
+      properties:
+        privateplaylistid:
+          type: integer
+          format: int64
+        playlist:
+          $ref: '#/components/schemas/Playlist'
+        user:
+          $ref: '#/components/schemas/User'
+
+  securitySchemes:
+    playlist_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: http://MusicPlaylist/oauth/dialog
+          scopes:
+            write:products: modify products in your account
+            read:products: read your products
+            read:users: read users
+            write:user: modify playlists in your account
+            write:customs: write customs
+            admin: admin priviledges
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+
