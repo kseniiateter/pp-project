@@ -1,5 +1,5 @@
 # pp-project
-python -m venv venv 
+python3 -m venv venv 
 
 venv\Scripts\activate.bat
 
