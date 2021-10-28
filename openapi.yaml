@@ -628,7 +628,7 @@ components:
     Song:
       required:
       - name
-      - count
+      - length
       type: object
       properties:
         songId:
@@ -641,15 +641,15 @@ components:
           type: integer
           example: 2019
         length:
-          type: integer
-          format: int64
+          type: number
+          multipleOf: 0.01
       xml:
         name: song
         
 
     Playlist:
       properties:
-        playlistid:
+        playlistId:
           type: integer
           format: int64
         name:
@@ -666,7 +666,7 @@ components:
           
     PrivatePlaylist:
       properties:
-        privateplaylistid:
+        privateplaylistId:
           type: integer
           format: int64
         playlist:
