@@ -14,10 +14,9 @@ from sqlalchemy import (
 )
 from sqlalchemy import orm, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker,scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session
 
-
-SQLALCHEMY_DATABASE_URL = "mysql+mysqldb://root:sqlLp9lp@localhost:3306/pp_music"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:root@localhost/pp_music"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 
 SessionFactory = sessionmaker(bind=engine)
@@ -25,6 +24,7 @@ SessionFactory = sessionmaker(bind=engine)
 Session = scoped_session(SessionFactory)
 
 Base = declarative_base()
+
 
 class User(Base):
     __tablename__ = "user"
@@ -46,7 +46,7 @@ class User(Base):
     def __str__(self):
         return f"Id: {self.Id}\n" \
                f"userStatus: {self.userStatus}\n" \
-               f"userName: {self.userName}\n"\
+               f"userName: {self.userName}\n" \
                f"firstName: {self.firstName}\n" \
                f"lastName: {self.lastName}\n" \
                f"email: {self.email}\n" \
@@ -66,9 +66,9 @@ class Song(Base):
         return "<Song('%s','%s','%s','%s')>" % (self.songId, self.name, self.productionYear, self.length)
 
     def __str__(self):
-        return f"songId: {self.songId}\n"\
-               f"name: {self.name}\n"\
-               f"productionYear: {self.productionYear}\n"\
+        return f"songId: {self.songId}\n" \
+               f"name: {self.name}\n" \
+               f"productionYear: {self.productionYear}\n" \
                f"length: {self.length}\n"
 
 
@@ -78,12 +78,11 @@ class Playlist(Base):
     playlistId = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
 
-
     def __repr__(self):
         return "<Song('%s','%s')>" % (self.playlistId, self.name)
 
     def __str__(self):
-        return f"playlistid: {self.playlistId}\n"\
+        return f"playlistid: {self.playlistId}\n" \
                f"name: {self.name}\n"
 
 
@@ -100,6 +99,7 @@ class PlaylistsSongs(Base):
         PrimaryKeyConstraint('songId', 'playlistId'), {}
     )
 
+
 class PrivatePlaylist(Base):
     __tablename__ = "privateplaylist"
 
@@ -115,5 +115,3 @@ class PrivatePlaylist(Base):
 
     def __str__(self):
         return f"privateplaylistId: {self.privateplaylistId}\n"
-
-
