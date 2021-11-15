@@ -17,7 +17,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:root@localhost/pp_music"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionFactory = sessionmaker(bind=engine)
 
