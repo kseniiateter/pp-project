@@ -16,7 +16,7 @@ config = context.config
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv("SQLALCHEMY_DATABASE_URL", "mysql+mysqldb://root:sqlLp9lp@localhost:3306/pp_music")
+    os.getenv("SQLALCHEMY_DATABASE_URL", "mysql+mysqlconnector://root:root@localhost/pp_music")
 )
 
 

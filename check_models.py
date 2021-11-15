@@ -1,4 +1,4 @@
-from lab4.models import Session, User, Song, Playlist, PrivatePlaylist, PlaylistsSongs
+from models import Session, User, Song, Playlist, PrivatePlaylist, PlaylistsSongs
 
 session = Session()
 

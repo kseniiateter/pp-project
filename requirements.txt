@@ -1,1 +1,8 @@
 Flask==2.0.1
+mysql-connector-python
+sqlalchemy
+alembic
+waitress
+marshmallow
+marshmallow_sqlalchemy
+bcrypt
