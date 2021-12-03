@@ -6,3 +6,4 @@ waitress
 marshmallow
 marshmallow_sqlalchemy
 bcrypt
+flask_httpauth

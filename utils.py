@@ -10,6 +10,24 @@ def find_by_id(model, id):
     return t
 
 
+def find_by_email(email):
+    session = Session()
+    try:
+        user = session.query(User).filter_by(email=email).one()
+    except:
+        return None
+    return user
+
+
+def find_by_username(userName):
+    session = Session()
+    try:
+        user = session.query(User).filter_by(userName=userName).one()
+    except:
+        return None
+    return user
+
+
 def update_util(model, data):
     try:
         if data.get('userName', None):

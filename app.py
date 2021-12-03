@@ -1,16 +1,30 @@
 from flask import Flask, request, jsonify
-from models import Session, User, Song, Playlist, PrivatePlaylist, PlaylistsSongs
 from constants import *
 from schemas import *
 from utils import *
 import bcrypt
+from flask_httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
 
 
 @app.route("/api/v1/hello-world-9")
 def hello_world():
     return "<p>Hello World 9</p>"
+
+
+@auth.verify_password
+def user_auth(username, password):
+    session = Session()
+    try:
+        user = session.query(User).filter_by(userName=username).one()
+    except:
+        return jsonify(BAD_USERNAME), 404
+    if bcrypt.checkpw(password.encode('utf8'), user.password.encode('utf8')):
+        return username, 200
+    else:
+        return jsonify(BAD_PASSWORD), 401
 
 
 # All about user
@@ -19,11 +33,20 @@ def create_user():
     session = Session()
     try:
         user_request = request.get_json()
+        email = user_request['email']
+        username = user_request['userName']
+
+        if find_by_email(email) is not None or find_by_username(username) is not None:
+            return jsonify(USER_ALREADY_EXISTS), 400
+
+        # password hashing ------------------------------------
+        passwd = user_request.get('password')
+        b = bytes(passwd, 'utf-8')
+        hashed_password = bcrypt.hashpw(b, bcrypt.gensalt())
+        user_request['password'] = hashed_password
+        # -----------------------------------------------------
 
         user = User(**user_request)
-
-        hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-        user.password = hashed_password
 
         session.add(user)
         session.commit()
@@ -34,12 +57,25 @@ def create_user():
 
 
 @app.route(BASE_PATH + USER_PATH + '/' + '<int:Id>', methods=['GET'])
-def get_user_by_userName(Id):
+@auth.login_required
+def get_user_by_id(Id):
     session = Session()
+    auth_rez = auth.current_user()
+
+    user1 = session.query(User).filter_by(userName=auth_rez[0]).one()
+
+    if int(Id) != user1.Id:
+        return jsonify(ACCESS_DENIED), 403
+
     try:
-        user = session.query(User).filter_by(Id=Id).one()
+        user = session.query(User).filter_by(Id=int(Id)).one()
     except:
         return jsonify(USER_NOT_FOUND), 404
+
+    user1 = session.query(User).filter_by(userName=auth_rez[0]).one()
+
+    if int(Id) != user1.Id:
+        return jsonify(ACCESS_DENIED), 403
 
     return jsonify(UserSchema().dump(user)), 200
 
@@ -58,8 +94,21 @@ def get_all_users():
 
 
 @app.route(BASE_PATH + USER_PATH + '/' + '<int:Id>', methods=['PUT'])
+@auth.login_required
 def update_user(Id):
     session = Session()
+    auth_rez = auth.current_user()
+
+    try:
+        session.query(User).filter_by(Id=int(Id)).one()
+    except:
+        return jsonify(USER_NOT_FOUND), 404
+
+    user1 = session.query(User).filter_by(userName=auth_rez[0]).one()
+
+    if int(Id) != user1.Id:
+        return jsonify(ACCESS_DENIED), 403
+
     try:
         if request.json['Id']:
             return jsonify(CANT_CHANGE_ID), 400
@@ -68,14 +117,19 @@ def update_user(Id):
     try:
         update_request = request.get_json()
 
-        try:
-            user = session.query(User).filter_by(Id=Id).one()
-        except:
-            return jsonify(USER_NOT_FOUND), 404
+        user = session.query(User).filter_by(Id=Id).one()
 
-        update_user = update_util(user, update_request)
+        if update_request.get('password'):
+            # password hashing ------------------------------------
+            passwd = update_request.get('password')
+            b = bytes(passwd, 'utf-8')
+            hashed_password = bcrypt.hashpw(b, bcrypt.gensalt())
+            update_request['password'] = hashed_password
+            # -----------------------------------------------------
 
-        if update_user == None:
+        updated_user = update_util(user, update_request)
+
+        if updated_user is None:
             return jsonify(SOMETHING_WENT_WRONG), 400
         session.commit()
         return jsonify(USER_UPDATED), 200
@@ -84,12 +138,23 @@ def update_user(Id):
 
 
 @app.route(BASE_PATH + USER_PATH + '/' + '<int:Id>', methods=['DELETE'])
+@auth.login_required
 def delete_user(Id):
     session = Session()
+    auth_rez = auth.current_user()
+
+    user1 = session.query(User).filter_by(userName=auth_rez[0]).one()
+
+    if int(Id) != user1.Id:
+        return jsonify(ACCESS_DENIED), 403
+
     try:
-        user = session.query(User).filter_by(Id=Id).one()
+        session.query(User).filter_by(Id=int(Id)).one()
     except:
         return jsonify(USER_NOT_FOUND), 404
+
+    user = session.query(User).filter_by(Id=Id).one()
+
     session.delete(user)
     session.commit()
 
@@ -98,8 +163,13 @@ def delete_user(Id):
 
 # All about song
 @app.route(BASE_PATH + SONG_PATH, methods=['POST'])
+@auth.login_required
 def place_song():
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
     try:
         song_request = request.get_json()
 
@@ -114,8 +184,12 @@ def place_song():
 
 
 @app.route(BASE_PATH + SONG_PATH + '/' + '<int:songId>', methods=['GET'])
+@auth.login_required
 def get_song_by_id(songId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
     try:
         song = session.query(Song).filter_by(songId=songId).one()
     except:
@@ -125,8 +199,12 @@ def get_song_by_id(songId):
 
 
 @app.route(BASE_PATH + SONG_PATH, methods=['GET'])
+@auth.login_required
 def get_all_songs():
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
     try:
         songs = session.query(Song).all()
     except:
@@ -138,8 +216,12 @@ def get_all_songs():
 
 
 @app.route(BASE_PATH + SONG_PATH + '/' + '<int:songId>', methods=['DELETE'])
+@auth.login_required
 def delete_song(songId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
     try:
         song = session.query(Song).filter_by(songId=songId).one()
     except:
@@ -151,8 +233,12 @@ def delete_song(songId):
 
 
 @app.route(BASE_PATH + SONG_PATH + '/' + '<int:songId>', methods=['PUT'])
+@auth.login_required
 def edit_song(songId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
     try:
         if request.json['songId']:
             return jsonify(CANT_CHANGE_ID), 400
@@ -168,7 +254,7 @@ def edit_song(songId):
 
         update_song = update_util(song, update_request)
 
-        if update_song == None:
+        if update_song is None:
             return jsonify(SOMETHING_WENT_WRONG), 400
 
         session.commit()
@@ -194,8 +280,12 @@ def edit_song(songId):
 
 # All about playlist
 @app.route(BASE_PATH + PLAYLIST_PATH, methods=['POST'])
+@auth.login_required
 def create_playlist():
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
     try:
         playlist_request = request.get_json()
 
@@ -210,8 +300,19 @@ def create_playlist():
 
 
 @app.route(BASE_PATH + PLAYLIST_PATH + '/' + '<int:playlistId>', methods=['GET'])
+@auth.login_required
 def get_playlist_by_id(playlistId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    if session.query(PrivatePlaylist).filter_by(playlistId=playlistId).all():
+        p_playlist = session.query(PrivatePlaylist).filter_by(playlistId=playlistId).one()
+        user = session.query(User).filter_by(Id=p_playlist.Id).one()
+        if user.userName != auth_rez[0]:
+            return jsonify(PRIVATE_PLAYLIST), 404
+
     try:
         playlist = session.query(Playlist).filter_by(playlistId=playlistId).one()
     except:
@@ -220,22 +321,30 @@ def get_playlist_by_id(playlistId):
     return jsonify(PlaylistSchema().dump(playlist)), 200
 
 
-@app.route(BASE_PATH + PLAYLIST_PATH, methods=['GET'])
-def get_all_playlists():
-    session = Session()
-    try:
-        playlists = session.query(Playlist).all()
-    except:
-        playlists = []
-
-    playlist_dto = PlaylistSchema(many=True)
-
-    return jsonify(playlist_dto.dump(playlists)), 200
+# @app.route(BASE_PATH + PLAYLIST_PATH, methods=['GET'])
+# @auth.login_required
+# def get_all_playlists():
+#     session = Session()
+#     auth_rez = auth.current_user()
+#     if auth_rez[1] != 200:
+#         return auth_rez
+#     try:
+#         playlists = session.query(Playlist).all()
+#     except:
+#         playlists = []
+#
+#     playlist_dto = PlaylistSchema(many=True)
+#
+#     return jsonify(playlist_dto.dump(playlists)), 200
 
 
 @app.route(BASE_PATH + PLAYLIST_PATH + '/public', methods=['GET'])
+@auth.login_required
 def get_all_public_playlists():
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
     try:
         playlists = session.query(Playlist).all()
     except:
@@ -261,8 +370,18 @@ def get_all_public_playlists():
 
 
 @app.route(BASE_PATH + PLAYLIST_PATH + '/' + '<int:playlistId>', methods=['DELETE'])
+@auth.login_required
 def delete_playlist(playlistId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    if session.query(PrivatePlaylist).filter_by(playlistId=playlistId).all():
+        p_playlist = session.query(PrivatePlaylist).filter_by(playlistId=playlistId).one()
+        user = session.query(User).filter_by(Id=p_playlist.Id).one()
+        if user.userName != auth_rez[0]:
+            return jsonify(ACCESS_DENIED), 404
     try:
         playlist = session.query(Playlist).filter_by(playlistId=playlistId).one()
     except:
@@ -274,8 +393,19 @@ def delete_playlist(playlistId):
 
 
 @app.route(BASE_PATH + PLAYLIST_PATH + '/' + '<int:playlistId>', methods=['PUT'])
+@auth.login_required
 def edit_playlist(playlistId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    if session.query(PrivatePlaylist).filter_by(playlistId=playlistId).all():
+        p_playlist = session.query(PrivatePlaylist).filter_by(playlistId=playlistId).one()
+        user = session.query(User).filter_by(Id=p_playlist.Id).one()
+        if user.userName != auth_rez[0]:
+            return jsonify(ACCESS_DENIED), 404
+
     try:
         if request.json['playlistId']:
             return jsonify(CANT_CHANGE_ID), 400
@@ -292,7 +422,7 @@ def edit_playlist(playlistId):
 
         update_playlist = update_util(playlist, update_request)
 
-        if update_playlist == None:
+        if update_playlist is None:
             return jsonify(SOMETHING_WENT_WRONG), 400
 
         session.commit()
@@ -302,8 +432,19 @@ def edit_playlist(playlistId):
 
 
 @app.route(BASE_PATH + PLAYLIST_PATH + '/' + '<int:playlistId>' + '/' + '<int:songId>', methods=['POST'])
+@auth.login_required
 def add_song(playlistId, songId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    if session.query(PrivatePlaylist).filter_by(playlistId=playlistId).all():
+        p_playlist = session.query(PrivatePlaylist).filter_by(playlistId=playlistId).one()
+        user = session.query(User).filter_by(Id=p_playlist.Id).one()
+        if user.userName != auth_rez[0]:
+            return jsonify(ACCESS_DENIED), 404
+
     try:
         session.query(Song).filter_by(songId=songId).one()
     except:
@@ -312,6 +453,9 @@ def add_song(playlistId, songId):
         session.query(Playlist).filter_by(playlistId=playlistId).one()
     except:
         return jsonify(PLAYLIST_NOT_FOUND), 404
+
+    if session.query(PlaylistsSongs).filter_by(playlistId=playlistId, songId=songId).all():
+        return jsonify(SONG_ALREADY_IN_PLAYLIST), 400
 
     playlist_song = PlaylistsSongs(songId=songId, playlistId=playlistId)
 
@@ -322,8 +466,19 @@ def add_song(playlistId, songId):
 
 
 @app.route(BASE_PATH + PLAYLIST_PATH + '/' + '<int:playlistId>' + '/' + '<int:songId>', methods=['DELETE'])
+@auth.login_required
 def del_song(playlistId, songId):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    if session.query(PrivatePlaylist).filter_by(playlistId=playlistId).all():
+        p_playlist = session.query(PrivatePlaylist).filter_by(playlistId=playlistId).one()
+        user = session.query(User).filter_by(Id=p_playlist.Id).one()
+        if user.userName != auth_rez[0]:
+            return jsonify(ACCESS_DENIED), 404
+
     try:
         session.query(Song).filter_by(songId=songId).one()
     except:
@@ -342,8 +497,12 @@ def del_song(playlistId, songId):
 
 # All about private playlist
 @app.route(BASE_PATH + PRIVATE_PLAYLIST_PATH, methods=['POST'])
+@auth.login_required
 def create_private_playlist():
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
     _playlistId = request.json['playlistId']
     if session.query(PrivatePlaylist).filter_by(playlistId=_playlistId).all():
         return jsonify(PLAYLIST_ALREADY_PRIVATE), 400
@@ -351,6 +510,10 @@ def create_private_playlist():
     try:
 
         private_playlist_request = request.get_json()
+
+        user = session.query(User).filter_by(userName=auth_rez[0]).one()
+        if private_playlist_request['Id'] != user.Id:
+            return jsonify(ACCESS_DENIED)
         try:
             session.query(User).filter_by(Id=private_playlist_request['Id']).one()
         except:
@@ -371,8 +534,18 @@ def create_private_playlist():
 
 
 @app.route(BASE_PATH + PRIVATE_PLAYLIST_PATH + '/' + '<int:Id>', methods=['GET'])
+@auth.login_required
 def get_private_playlists_by_id(Id):
     session = Session()
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    user1 = session.query(User).filter_by(userName=auth_rez[0]).one()
+
+    if int(Id) != user1.Id:
+        return jsonify(ACCESS_DENIED), 403
+
     try:
         session.query(User).filter_by(Id=Id).one()
     except:

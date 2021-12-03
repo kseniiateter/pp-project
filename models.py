@@ -1,22 +1,17 @@
-import os
-import sys
-
 from sqlalchemy import (
     Column,
     Integer,
     ForeignKey,
     String,
-    BigInteger,
-    DateTime,
     Boolean,
     DECIMAL,
-    func, PrimaryKeyConstraint,
+    PrimaryKeyConstraint,
 )
 from sqlalchemy import orm, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:root@localhost/pp_music"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mySQL.kt.1502@localhost:3306/pp_music"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionFactory = sessionmaker(bind=engine)
@@ -111,7 +106,7 @@ class PrivatePlaylist(Base):
     playlist = orm.relationship("Playlist")
 
     def __repr__(self):
-        return "<Privateplaylist('%s')>" % (self.privateplaylistId)
+        return "<Privateplaylist('%s')>" % self.privateplaylistId
 
     def __str__(self):
         return f"privateplaylistId: {self.privateplaylistId}\n"

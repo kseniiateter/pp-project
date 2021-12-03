@@ -4,6 +4,12 @@ USER_PATH = '/user'
 SONG_PATH = '/song'
 PLAYLIST_PATH = '/playlist'
 PRIVATE_PLAYLIST_PATH = '/playlist/private'
+LOGIN_PATH = '/login'
+
+# auth
+BAD_USERNAME = 'Username is not correct! User not found or does not exist.'
+BAD_PASSWORD = 'Wrong password!'
+ACCESS_DENIED = 'Access denied!'
 
 # general messages
 SOMETHING_WENT_WRONG = 'Ooooops....Something went wrong'
@@ -24,6 +30,7 @@ SONG_DELETED = 'Song successfully deleted'
 SONG_ADDED_TO_PLAYLIST = 'Song successfully added to playlist'
 SONG_DELETED_FROM_PLAYLIST = 'Song successfully deleted from playlist'
 SONG_ALREADY_EXIST = 'Song already exists, provide unique id'
+SONG_ALREADY_IN_PLAYLIST = 'Song is already in this playlist'
 
 # playlist messages
 PLAYLIST_CREATED = 'Playlist successfully created'
@@ -36,4 +43,4 @@ PLAYLIST_ALREADY_EXIST = 'Playlist already exists, provide unique id'
 # private playlist
 PRIVATE_PLAYLIST_CREATED = 'Private playlist successfully created'
 PLAYLIST_ALREADY_PRIVATE = 'Playlist is already private and has a user, provide another playlistId'
-
+PRIVATE_PLAYLIST = 'This playlist is private'

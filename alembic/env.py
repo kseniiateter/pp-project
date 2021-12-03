@@ -7,7 +7,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-sys.path.append(r"D:\lab6_pp\pp-project\lab4\models.py")
+sys.path.append(r"C:\Users\Kcюша\pp_project")
 from models import Base, SQLALCHEMY_DATABASE_URL
 
 # this is the Alembic Config object, which provides
@@ -16,7 +16,7 @@ config = context.config
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv("SQLALCHEMY_DATABASE_URL", "mysql+mysqlconnector://root:root@localhost/pp_music")
+    os.getenv("SQLALCHEMY_DATABASE_URL", "mysql://root:mySQL.kt.1502@localhost:3306/pp_music")
 )
 
 
